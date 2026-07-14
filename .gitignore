@@ -6,6 +6,8 @@ __pycache__
 
 .venv
 
+.worktrees
+
 .claude
 
 .ruff_cache
