@@ -22,7 +22,7 @@ plugins:
   - provider/pdf_process.yaml
 privacy: PRIVACY.md
 resource:
-  memory: 1048576
+  memory: 268435456
   permission:
     model:
       enabled: true

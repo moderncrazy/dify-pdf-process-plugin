@@ -17,6 +17,10 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class PDFPerformanceTests(unittest.TestCase):
+    def test_manifest_declares_256_mib_of_memory(self):
+        manifest = (PROJECT_ROOT / "manifest.yaml").read_text()
+        self.assertRegex(manifest, r"(?m)^  memory: 268435456$")
+
     def test_multi_page_tool_uses_optimized_ordered_insertion(self):
         source = (PROJECT_ROOT / "tools/pdf_multi_pages_extractor.py").read_text()
         self.assertIn(
