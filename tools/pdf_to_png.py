@@ -1,13 +1,13 @@
-import io
 from collections.abc import Generator
 from typing import Any, Optional
 
 import pymupdf
-from PIL import Image
 from dify_plugin.entities import I18nObject
 from dify_plugin.entities.tool import ToolInvokeMessage, ToolParameter
 from dify_plugin import Tool
 from dify_plugin.file.file import File
+
+from tools.pdf_performance import pixmap_to_png
 
 
 class PDFToPNGTool(Tool):
@@ -30,7 +30,7 @@ class PDFToPNGTool(Tool):
         Args:
             tool_parameters (dict[str, Any]): Parameters for the tool
                 - pdf_content (File): Dify File object containing the PDF
-                - zoom (float): Zoom factor for image quality (default is 2)
+                - zoom (float): Zoom factor for image quality (default is 1)
             user_id (Optional[str]): The ID of the user invoking the tool
             conversation_id (Optional[str]): The conversation ID
             app_id (Optional[str]): The app ID
@@ -52,17 +52,14 @@ class PDFToPNGTool(Tool):
 
             # Get zoom parameter with default value
             zoom_param = tool_parameters.get("zoom")
-            zoom = 2 if zoom_param is None else int(zoom_param)
+            zoom = 1 if zoom_param is None else int(zoom_param)
 
             original_filename = pdf_content.filename or "document"
             base_filename = original_filename.rsplit(".", 1)[0]
 
-            # Convert bytes to BytesIO object
-            pdf_bytes_io = io.BytesIO(pdf_content.blob)
-
             try:
                 # Open PDF with PyMuPDF
-                doc = pymupdf.open(stream=pdf_bytes_io, filetype="pdf")
+                doc = pymupdf.open(stream=pdf_content.blob, filetype="pdf")
             except Exception as e:
                 raise ValueError(f"Invalid PDF file: {str(e)}")
 
@@ -74,25 +71,15 @@ class PDFToPNGTool(Tool):
             for page_num in range(total_pages):
                 page = doc.load_page(page_num)
                 mat = pymupdf.Matrix(zoom, zoom)
-                pix = page.get_pixmap(matrix=mat)
-
-                # Convert PyMuPDF pixmap to PIL Image
-                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-                # Release pixmap memory
-                pix = None
-
-                # Save PIL Image to an in-memory bytes buffer
-                img_buffer = io.BytesIO()
-                img.save(img_buffer, format="PNG")
-                img_buffer.seek(0)
+                pix = page.get_pixmap(matrix=mat, alpha=False)
+                png_bytes = pixmap_to_png(pix)
 
                 # Create filename for this page
                 output_filename = f"{base_filename}_page{page_num + 1}.png"
 
                 # Send the PNG image
                 yield self.create_blob_message(
-                    blob=img_buffer.getvalue(),
+                    blob=png_bytes,
                     meta={"mime_type": "image/png", "file_name": output_filename},
                 )
 
@@ -143,13 +130,13 @@ class PDFToPNGTool(Tool):
                 name="zoom",
                 label=I18nObject(en_US="Zoom Factor", zh_Hans="缩放因子"),
                 human_description=I18nObject(
-                    en_US="Zoom factor for image quality (default is 2)",
-                    zh_Hans="图像质量的缩放因子（默认为2）",
+                    en_US="Zoom factor for image quality (default is 1)",
+                    zh_Hans="图像质量的缩放因子（默认为1）",
                 ),
                 type=ToolParameter.ToolParameterType.NUMBER,
                 form=ToolParameter.ToolParameterForm.FORM,
                 required=False,
-                default=2,
+                default=1,
             ),
         ]
         return parameters

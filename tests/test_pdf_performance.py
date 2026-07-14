@@ -17,6 +17,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class PDFPerformanceTests(unittest.TestCase):
+    def test_pdf_to_png_defaults_zoom_to_one_in_python_and_yaml(self):
+        python_source = (PROJECT_ROOT / "tools/pdf_to_png.py").read_text()
+        yaml_source = (PROJECT_ROOT / "tools/pdf_to_png.yaml").read_text()
+
+        self.assertIn(
+            "zoom = 1 if zoom_param is None else int(zoom_param)", python_source
+        )
+        self.assertRegex(yaml_source, r"(?m)^  default: 1$")
+
     def test_pixmap_to_png_preserves_dimensions_and_format(self):
         document = pymupdf.open()
         page = document.new_page(width=40, height=30)

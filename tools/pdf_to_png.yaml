@@ -26,8 +26,8 @@ parameters:
   type: file
 - form: llm
   human_description:
-    en_US: Zoom factor for image quality (default is 2)
-    zh_Hans: 图像质量的缩放因子（默认为2）
+    en_US: Zoom factor for image quality (default is 1)
+    zh_Hans: 图像质量的缩放因子（默认为1）
   label:
     en_US: Zoom Factor
     zh_Hans: 缩放因子
@@ -35,4 +35,4 @@ parameters:
   name: zoom
   required: false
   type: number
-  default: 2
+  default: 1
