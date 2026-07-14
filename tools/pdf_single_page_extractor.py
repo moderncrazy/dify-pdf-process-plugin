@@ -68,13 +68,10 @@ class PDFSinglePageExtractorTool(Tool):
                 )
 
             # Get the PDF content directly from the File object
-            pdf_bytes = pdf_content.blob
             original_filename = pdf_content.filename or "document"
 
-            pdf_file = io.BytesIO(pdf_bytes)
-
             try:
-                doc = pymupdf.open(stream=pdf_file, filetype="pdf")
+                doc = pymupdf.open(stream=pdf_content.blob, filetype="pdf")
             except Exception as e:
                 raise ValueError(f"Invalid PDF file: {str(e)}")
 

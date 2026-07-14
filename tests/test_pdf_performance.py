@@ -17,6 +17,27 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class PDFPerformanceTests(unittest.TestCase):
+    def test_multi_page_tool_uses_optimized_ordered_insertion(self):
+        source = (PROJECT_ROOT / "tools/pdf_multi_pages_extractor.py").read_text()
+        self.assertIn(
+            "selected_page_indices = fixed_page_indices + dynamic_page_indices",
+            source,
+        )
+        self.assertIn("insert_pdf_pages(output, doc, selected_page_indices)", source)
+        self.assertNotIn("for index in fixed_page_indices", source)
+        self.assertNotIn("for index in dynamic_page_indices", source)
+
+    def test_extractors_open_the_original_blob_directly(self):
+        for filename in (
+            "pdf_multi_pages_extractor.py",
+            "pdf_single_page_extractor.py",
+        ):
+            source = (PROJECT_ROOT / f"tools/{filename}").read_text()
+            self.assertIn(
+                'pymupdf.open(stream=pdf_content.blob, filetype="pdf")',
+                source,
+            )
+
     def test_pdf_to_png_defaults_zoom_to_one_in_python_and_yaml(self):
         python_source = (PROJECT_ROOT / "tools/pdf_to_png.py").read_text()
         yaml_source = (PROJECT_ROOT / "tools/pdf_to_png.yaml").read_text()
