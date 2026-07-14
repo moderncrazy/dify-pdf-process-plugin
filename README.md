@@ -70,7 +70,7 @@ Converts each page of a PDF file into high-quality PNG images with configurable 
 Parameters:
 
 - **PDF Content**: The input PDF file (required)
-- **Zoom Factor**: Quality control zoom factor (optional, defaults to 2)
+- **Zoom Factor**: Quality control zoom factor (optional, defaults to 1)
 
 ![PDF to PNG Converter Interface](./_assets/pdf_to_png.png)
 

@@ -17,18 +17,22 @@
 - Do not add user-facing parameters or production dependencies.
 - Keep Pillow as the PNG encoder and use lossless PNG compression level `2`.
 
----
+______________________________________________________________________
 
 ### Task 1: Add Tested Performance Primitives
 
 **Files:**
+
 - Create: `tools/pdf_performance.py`
 - Create: `tests/__init__.py`
 - Create: `tests/test_pdf_performance.py`
 
 **Interfaces:**
+
 - Produces: `pixmap_to_png(pixmap: Any) -> bytes`
+
 - Produces: `contiguous_page_runs(indices: list[int]) -> list[tuple[int, int]]`
+
 - Produces: `insert_pdf_pages(output: Any, source: Any, indices: list[int]) -> None`
 
 - [ ] **Step 1: Write failing tests for PNG encoding**
@@ -210,12 +214,15 @@ git commit -m "perf: add efficient PDF processing primitives"
 ### Task 2: Optimize PDF-to-PNG and Change the Default Zoom
 
 **Files:**
+
 - Modify: `tools/pdf_to_png.py:1-105`
 - Modify: `tools/pdf_to_png.yaml:35-46`
 - Modify: `tests/test_pdf_performance.py`
 
 **Interfaces:**
+
 - Consumes: `pixmap_to_png(pixmap: Any) -> bytes`
+
 - Produces: unchanged `PDFToPNGTool._invoke(...)` message stream
 
 - [ ] **Step 1: Add failing configuration tests**
@@ -280,12 +287,15 @@ git commit -m "perf: reduce PDF-to-PNG rendering overhead"
 ### Task 3: Optimize Selected-Page PDF Extraction
 
 **Files:**
+
 - Modify: `tools/pdf_multi_pages_extractor.py:1-201`
 - Modify: `tools/pdf_single_page_extractor.py:1-114`
 - Test: `tests/test_pdf_performance.py`
 
 **Interfaces:**
+
 - Consumes: `insert_pdf_pages(output: Any, source: Any, indices: Sequence[int]) -> None`
+
 - Produces: unchanged PDF blob message content and naming behavior
 
 - [ ] **Step 1: Add a failing production-integration test**
@@ -352,10 +362,12 @@ git commit -m "perf: reuse resources when extracting PDF pages"
 ### Task 4: Correct Resource Declaration and Verify the Whole Change
 
 **Files:**
+
 - Modify: `manifest.yaml:24-31`
 - Modify: `tests/test_pdf_performance.py`
 
 **Interfaces:**
+
 - Produces: plugin manifest requesting exactly `268435456` bytes of memory
 
 - [ ] **Step 1: Add a failing manifest test**

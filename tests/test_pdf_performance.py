@@ -1,4 +1,7 @@
 import io
+import importlib
+import sys
+import types
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -14,6 +17,50 @@ from tools.pdf_performance import (
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_pdf_to_png_module():
+    class File:
+        def __init__(self, blob, filename):
+            self.blob = blob
+            self.filename = filename
+
+    class Tool:
+        def create_blob_message(self, blob, meta):
+            return {"type": "blob", "blob": blob, "meta": meta}
+
+        def create_text_message(self, text):
+            return {"type": "text", "text": text}
+
+    class ToolParameter:
+        class ToolParameterType:
+            FILE = "file"
+            NUMBER = "number"
+
+        class ToolParameterForm:
+            FORM = "form"
+
+    dify_plugin = types.ModuleType("dify_plugin")
+    dify_plugin.Tool = Tool
+    entities = types.ModuleType("dify_plugin.entities")
+    entities.I18nObject = object
+    tool_entities = types.ModuleType("dify_plugin.entities.tool")
+    tool_entities.ToolInvokeMessage = dict
+    tool_entities.ToolParameter = ToolParameter
+    file_package = types.ModuleType("dify_plugin.file")
+    file_module = types.ModuleType("dify_plugin.file.file")
+    file_module.File = File
+
+    modules = {
+        "dify_plugin": dify_plugin,
+        "dify_plugin.entities": entities,
+        "dify_plugin.entities.tool": tool_entities,
+        "dify_plugin.file": file_package,
+        "dify_plugin.file.file": file_module,
+    }
+    sys.modules.pop("tools.pdf_to_png", None)
+    with patch.dict(sys.modules, modules):
+        return importlib.import_module("tools.pdf_to_png")
 
 
 class PDFPerformanceTests(unittest.TestCase):
@@ -45,11 +92,54 @@ class PDFPerformanceTests(unittest.TestCase):
     def test_pdf_to_png_defaults_zoom_to_one_in_python_and_yaml(self):
         python_source = (PROJECT_ROOT / "tools/pdf_to_png.py").read_text()
         yaml_source = (PROJECT_ROOT / "tools/pdf_to_png.yaml").read_text()
+        readme = (PROJECT_ROOT / "README.md").read_text()
 
         self.assertIn(
             "zoom = 1 if zoom_param is None else int(zoom_param)", python_source
         )
         self.assertRegex(yaml_source, r"(?m)^  default: 1$")
+        self.assertIn("defaults to 1", readme)
+
+    def test_pdf_to_png_tool_preserves_messages_and_explicit_zoom(self):
+        source = pymupdf.open()
+        for color in ((1, 0, 0), (0, 0, 1)):
+            page = source.new_page(width=40, height=30)
+            page.draw_rect(page.rect, fill=color)
+        pdf_blob = source.tobytes()
+        source.close()
+
+        module = load_pdf_to_png_module()
+        tool = module.PDFToPNGTool()
+        pdf_file = module.File(pdf_blob, "sample.pdf")
+
+        with patch.object(module.pymupdf, "open", wraps=pymupdf.open) as open_pdf:
+            default_messages = list(tool._invoke({"pdf_content": pdf_file}))
+
+        self.assertIs(open_pdf.call_args.kwargs["stream"], pdf_blob)
+        self.assertEqual(
+            [message["type"] for message in default_messages],
+            ["blob", "blob", "text"],
+        )
+        self.assertEqual(
+            [message["meta"]["file_name"] for message in default_messages[:2]],
+            ["sample_page1.png", "sample_page2.png"],
+        )
+        self.assertEqual(
+            [
+                Image.open(io.BytesIO(message["blob"])).size
+                for message in default_messages[:2]
+            ],
+            [(40, 30), (40, 30)],
+        )
+
+        explicit_messages = list(tool._invoke({"pdf_content": pdf_file, "zoom": 2}))
+        self.assertEqual(
+            [
+                Image.open(io.BytesIO(message["blob"])).size
+                for message in explicit_messages[:2]
+            ],
+            [(80, 60), (80, 60)],
+        )
 
     def test_pixmap_to_png_preserves_dimensions_and_format(self):
         document = pymupdf.open()
@@ -58,11 +148,13 @@ class PDFPerformanceTests(unittest.TestCase):
         pixmap = page.get_pixmap(alpha=False)
 
         png_bytes = pixmap_to_png(pixmap)
+        reference_pixels = bytes(pixmap.samples)
 
         with Image.open(io.BytesIO(png_bytes)) as image:
             self.assertEqual(image.format, "PNG")
             self.assertEqual(image.mode, "RGB")
             self.assertEqual(image.size, (40, 30))
+            self.assertEqual(image.tobytes(), reference_pixels)
 
         document.close()
 
