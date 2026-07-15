@@ -145,12 +145,12 @@ Expected: workflow tests fail because `.github/workflows/plugin-release.yml` doe
 Create `.github/workflows/plugin-release.yml` with these stages:
 
 1. Resolve the tag from `github.ref_name` for tag pushes or the required `tag` input for manual dispatch.
-1. Check out exactly the resolved tag using `actions/checkout@v4`.
-1. Read the first-column `name:` and `version:` values from `manifest.yaml`, require `RELEASE_TAG=v${VERSION}`, and expose `plugin_name`, `version`, and `package_name=${PLUGIN_NAME}-${VERSION}.difypkg` as step outputs.
-1. Download `https://github.com/langgenius/dify-plugin-daemon/releases/download/0.0.6/dify-plugin-linux-amd64` with `curl -fL --retry 3`, then make it executable.
-1. Run `dify-plugin plugin package . -o "$PACKAGE_NAME"` and `test -s "$PACKAGE_NAME"`.
-1. With `GH_TOKEN: ${{ github.token }}`, fail explicitly if `gh release view "$RELEASE_TAG"` succeeds.
-1. Create the Release with the package attachment, `--verify-tag`, `--generate-notes`, and title `PDF Process $RELEASE_TAG`.
+2. Check out exactly the resolved tag using `actions/checkout@v4`.
+3. Read the first-column `name:` and `version:` values from `manifest.yaml`, require `RELEASE_TAG=v${VERSION}`, and expose `plugin_name`, `version`, and `package_name=${PLUGIN_NAME}-${VERSION}.difypkg` as step outputs.
+4. Download `https://github.com/langgenius/dify-plugin-daemon/releases/download/0.0.6/dify-plugin-linux-amd64` with `curl -fL --retry 3`, then make it executable.
+5. Run `dify-plugin plugin package . -o "$PACKAGE_NAME"` and `test -s "$PACKAGE_NAME"`.
+6. With `GH_TOKEN: ${{ github.token }}`, fail explicitly if `gh release view "$RELEASE_TAG"` succeeds.
+7. Create the Release with the package attachment, `--verify-tag`, `--generate-notes`, and title `PDF Process $RELEASE_TAG`.
 
 Set repository permission only to:
 

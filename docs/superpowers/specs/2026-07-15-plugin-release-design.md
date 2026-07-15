@@ -29,16 +29,16 @@ The workflow will:
 
 1. Run on pushed tags matching `v*` and support manual dispatch with an
    existing tag as input.
-1. Check out the tagged source.
-1. Read the top-level `name` and `version` fields from `manifest.yaml`.
-1. Reject the run if the release tag is not exactly `v<manifest-version>`.
-1. Download the pinned official Dify plugin CLI used by the reference
+2. Check out the tagged source.
+3. Read the top-level `name` and `version` fields from `manifest.yaml`.
+4. Reject the run if the release tag is not exactly `v<manifest-version>`.
+5. Download the pinned official Dify plugin CLI used by the reference
    repository (`0.0.6`, Linux AMD64).
-1. Package the repository with `dify-plugin plugin package` into
+6. Package the repository with `dify-plugin plugin package` into
    `<name>-<version>.difypkg`.
-1. Fail if the GitHub Release already exists, otherwise create it with generated
+7. Fail if the GitHub Release already exists, otherwise create it with generated
    notes.
-1. Upload the `.difypkg` using the repository-provided `GITHUB_TOKEN` with
+8. Upload the `.difypkg` using the repository-provided `GITHUB_TOKEN` with
    `contents: write` permission.
 
 The workflow will not require `PLUGIN_ACTION`, open a Marketplace pull request,
@@ -60,10 +60,10 @@ Before publication:
 Publication order:
 
 1. Commit the identity, version, README, tests, and workflow changes.
-1. Push `main` to `origin`.
-1. Create annotated tag `v1.0.1` at the verified release commit.
-1. Push only that tag.
-1. Wait for the GitHub Actions workflow and verify the public Release points to
+2. Push `main` to `origin`.
+3. Create annotated tag `v1.0.1` at the verified release commit.
+4. Push only that tag.
+5. Wait for the GitHub Actions workflow and verify the public Release points to
    the tagged commit and contains `pdf_process-1.0.1.difypkg`.
 
 No force push, tag replacement, or Release overwrite is allowed. If tag
