@@ -32,6 +32,15 @@ class PluginReleaseIdentityTests(unittest.TestCase):
         self.assertNotIn("fdb02983rhy", readme)
         self.assertNotIn("Kalo Chin", readme)
 
+    def test_package_excludes_git_metadata_in_directories_and_worktrees(self):
+        ignored_entries = {
+            line.strip()
+            for line in (ROOT / ".difyignore").read_text(encoding="utf-8").splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        }
+
+        self.assertIn(".git", ignored_entries)
+
 
 class PluginReleaseWorkflowTests(unittest.TestCase):
     def workflow(self):

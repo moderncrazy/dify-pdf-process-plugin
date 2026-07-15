@@ -12,6 +12,8 @@ TODO.md
 
 .github/
 
+.git
+
 .gitignore
 
 .ruff_cache
