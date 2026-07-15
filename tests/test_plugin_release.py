@@ -59,8 +59,7 @@ class PluginReleaseWorkflowTests(unittest.TestCase):
         workflow = self.workflow()
 
         self.assertIn(
-            "dify-plugin-daemon/releases/download/0.0.6/"
-            "dify-plugin-linux-amd64",
+            "dify-plugin-daemon/releases/download/0.0.6/dify-plugin-linux-amd64",
             workflow,
         )
         self.assertIn('plugin package . -o "$PACKAGE_NAME"', workflow)
@@ -69,24 +68,16 @@ class PluginReleaseWorkflowTests(unittest.TestCase):
             workflow,
         )
         self.assertIn("sha256sum -c", workflow)
-        self.assertIn(
-            'package_name=${PLUGIN_NAME}-${VERSION}.difypkg', workflow
-        )
+        self.assertIn("package_name=${PLUGIN_NAME}-${VERSION}.difypkg", workflow)
         self.assertIn('EXPECTED_TAG="v${VERSION}"', workflow)
-        self.assertIn(
-            '$1 == "name:" && $0 !~ /^[[:space:]]/', workflow
-        )
+        self.assertIn('$1 == "name:" && $0 !~ /^[[:space:]]/', workflow)
 
     def test_workflow_rejects_git_metadata_in_built_archive(self):
         workflow = self.workflow()
 
-        self.assertIn(
-            'ARCHIVE_LIST="$RUNNER_TEMP/package-contents.txt"', workflow
-        )
-        self.assertIn(
-            'unzip -Z1 "$PACKAGE_NAME" > "$ARCHIVE_LIST"', workflow
-        )
-        self.assertIn('grep -Eq', workflow)
+        self.assertIn('ARCHIVE_LIST="$RUNNER_TEMP/package-contents.txt"', workflow)
+        self.assertIn('unzip -Z1 "$PACKAGE_NAME" > "$ARCHIVE_LIST"', workflow)
+        self.assertIn("grep -Eq", workflow)
         self.assertIn('"$ARCHIVE_LIST"', workflow)
         self.assertNotIn('unzip -Z1 "$PACKAGE_NAME" |', workflow)
         self.assertIn("git metadata", workflow.lower())
