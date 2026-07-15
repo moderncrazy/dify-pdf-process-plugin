@@ -80,7 +80,15 @@ class PluginReleaseWorkflowTests(unittest.TestCase):
     def test_workflow_rejects_git_metadata_in_built_archive(self):
         workflow = self.workflow()
 
-        self.assertIn('unzip -Z1 "$PACKAGE_NAME"', workflow)
+        self.assertIn(
+            'ARCHIVE_LIST="$RUNNER_TEMP/package-contents.txt"', workflow
+        )
+        self.assertIn(
+            'unzip -Z1 "$PACKAGE_NAME" > "$ARCHIVE_LIST"', workflow
+        )
+        self.assertIn('grep -Eq', workflow)
+        self.assertIn('"$ARCHIVE_LIST"', workflow)
+        self.assertNotIn('unzip -Z1 "$PACKAGE_NAME" |', workflow)
         self.assertIn("git metadata", workflow.lower())
         self.assertIn("exit 1", workflow)
 

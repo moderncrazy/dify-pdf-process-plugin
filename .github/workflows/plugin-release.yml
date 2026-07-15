@@ -82,7 +82,10 @@ jobs:
           "$RUNNER_TEMP/bin/dify-plugin" plugin package . -o "$PACKAGE_NAME"
           test -s "$PACKAGE_NAME"
 
-          if unzip -Z1 "$PACKAGE_NAME" | grep -Eq '(^|/)\.git(/|$)'; then
+          ARCHIVE_LIST="$RUNNER_TEMP/package-contents.txt"
+          unzip -Z1 "$PACKAGE_NAME" > "$ARCHIVE_LIST"
+
+          if grep -Eq '(^|/)\.git(/|$)' "$ARCHIVE_LIST"; then
             echo "Package contains Git metadata; refusing to publish it." >&2
             exit 1
           fi
