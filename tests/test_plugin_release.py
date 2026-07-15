@@ -65,9 +65,24 @@ class PluginReleaseWorkflowTests(unittest.TestCase):
         )
         self.assertIn('plugin package . -o "$PACKAGE_NAME"', workflow)
         self.assertIn(
+            "2a79897a1284e1fa870f4d859595ee8a4b786d39917ae66f1e34d1021a96c87a",
+            workflow,
+        )
+        self.assertIn("sha256sum -c", workflow)
+        self.assertIn(
             'package_name=${PLUGIN_NAME}-${VERSION}.difypkg', workflow
         )
         self.assertIn('EXPECTED_TAG="v${VERSION}"', workflow)
+        self.assertIn(
+            '$1 == "name:" && $0 !~ /^[[:space:]]/', workflow
+        )
+
+    def test_workflow_rejects_git_metadata_in_built_archive(self):
+        workflow = self.workflow()
+
+        self.assertIn('unzip -Z1 "$PACKAGE_NAME"', workflow)
+        self.assertIn("git metadata", workflow.lower())
+        self.assertIn("exit 1", workflow)
 
     def test_workflow_creates_non_overwriting_github_release(self):
         workflow = self.workflow()

@@ -48,7 +48,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          PLUGIN_NAME="$(awk '$1 == "name:" { print $2; exit }' manifest.yaml)"
+          PLUGIN_NAME="$(awk '$1 == "name:" && $0 !~ /^[[:space:]]/ { print $2; exit }' manifest.yaml)"
           VERSION="$(awk '$1 == "version:" && $0 !~ /^[[:space:]]/ { print $2; exit }' manifest.yaml)"
           EXPECTED_TAG="v${VERSION}"
 
@@ -67,9 +67,12 @@ jobs:
           echo "package_name=${PLUGIN_NAME}-${VERSION}.difypkg" >> "$GITHUB_OUTPUT"
 
       - name: Download Dify plugin CLI
+        env:
+          CLI_SHA256: 2a79897a1284e1fa870f4d859595ee8a4b786d39917ae66f1e34d1021a96c87a
         run: |
           mkdir -p "$RUNNER_TEMP/bin"
           curl -fL --retry 3 -o "$RUNNER_TEMP/bin/dify-plugin" "https://github.com/langgenius/dify-plugin-daemon/releases/download/0.0.6/dify-plugin-linux-amd64"
+          echo "$CLI_SHA256  $RUNNER_TEMP/bin/dify-plugin" | sha256sum -c -
           chmod +x "$RUNNER_TEMP/bin/dify-plugin"
 
       - name: Package plugin
@@ -78,6 +81,11 @@ jobs:
         run: |
           "$RUNNER_TEMP/bin/dify-plugin" plugin package . -o "$PACKAGE_NAME"
           test -s "$PACKAGE_NAME"
+
+          if unzip -Z1 "$PACKAGE_NAME" | grep -Eq '(^|/)\.git(/|$)'; then
+            echo "Package contains Git metadata; refusing to publish it." >&2
+            exit 1
+          fi
 
       - name: Ensure release does not exist
         env:
