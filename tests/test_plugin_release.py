@@ -33,5 +33,48 @@ class PluginReleaseIdentityTests(unittest.TestCase):
         self.assertNotIn("Kalo Chin", readme)
 
 
+class PluginReleaseWorkflowTests(unittest.TestCase):
+    def workflow(self):
+        path = ROOT / ".github/workflows/plugin-release.yml"
+        self.assertTrue(path.is_file(), "plugin release workflow must exist")
+        return path.read_text(encoding="utf-8")
+
+    def test_workflow_has_release_triggers_and_permission(self):
+        workflow = self.workflow()
+
+        self.assertIn('      - "v*"', workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("contents: write", workflow)
+
+    def test_workflow_uses_pinned_official_cli_and_versioned_package(self):
+        workflow = self.workflow()
+
+        self.assertIn(
+            "dify-plugin-daemon/releases/download/0.0.6/"
+            "dify-plugin-linux-amd64",
+            workflow,
+        )
+        self.assertIn('plugin package . -o "$PACKAGE_NAME"', workflow)
+        self.assertIn(
+            'package_name=${PLUGIN_NAME}-${VERSION}.difypkg', workflow
+        )
+        self.assertIn('EXPECTED_TAG="v${VERSION}"', workflow)
+
+    def test_workflow_creates_non_overwriting_github_release(self):
+        workflow = self.workflow()
+
+        self.assertIn("GH_TOKEN: ${{ github.token }}", workflow)
+        self.assertLess(
+            workflow.index("gh release view"),
+            workflow.index("gh release create"),
+        )
+        self.assertIn("--verify-tag", workflow)
+        self.assertIn("--generate-notes", workflow)
+
+        for marketplace_step in ("PLUGIN_ACTION", "dify-plugins", "gh pr create"):
+            with self.subTest(marketplace_step=marketplace_step):
+                self.assertNotIn(marketplace_step, workflow)
+
+
 if __name__ == "__main__":
     unittest.main()
