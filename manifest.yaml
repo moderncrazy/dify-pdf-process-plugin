@@ -1,4 +1,4 @@
-author: kalochin
+author: moderncrazy
 created_at: '2025-03-04T08:03:44.658609186Z'
 description:
   en_US: Tools for processing PDF content
@@ -32,4 +32,4 @@ resource:
 tags:
 - utilities
 type: plugin
-version: 1.0.0
+version: 1.0.1

@@ -90,8 +90,8 @@ This project uses the following third-party libraries:
 
 ## Author
 
-Created by [Kalo Chin](https://github.com/fdb02983rhy)
+Created by [moderncrazy](https://github.com/moderncrazy)
 
 ## Repository
 
-https://github.com/fdb02983rhy/dify-pdf-process-plugin
+https://github.com/moderncrazy/dify-pdf-process-plugin
